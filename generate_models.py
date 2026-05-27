@@ -744,29 +744,47 @@ def build_pdf(output_path):
     story.append(physical_img)
     story.append(Spacer(1, 0.4 * cm))
 
-    # Tabela DDL resumida
+    # Tabela DDL resumida — Paragraph em todas as células para quebra automática
     story.append(Paragraph("Estrutura das Tabelas (DDL Resumido):", body_style))
+
+    ddl_hdr = ParagraphStyle('DdlHdr', parent=styles['Normal'],
+                              fontSize=8, fontName='Helvetica-Bold',
+                              textColor=colors.white, leading=11)
+    ddl_body = ParagraphStyle('DdlBody', parent=styles['Normal'],
+                               fontSize=8, fontName='Helvetica', leading=11,
+                               textColor=colors.HexColor("#111827"))
+    ddl_code = ParagraphStyle('DdlCode', parent=styles['Normal'],
+                               fontSize=7.5, fontName='Courier', leading=11,
+                               textColor=colors.HexColor("#1D4ED8"))
+
     ddl_data = [
-        ["Tabela",      "Chave Primária", "Chaves Estrangeiras",                      "Constraint principal"],
-        ["usuarios",    "id SERIAL",      "—",                                        "email UNIQUE"],
-        ["categorias",  "id SERIAL",      "id_usuario → usuarios(id) ON DELETE CASCADE",
-         "nome NOT NULL"],
-        ["transacoes",  "id SERIAL",
-         "id_usuario → usuarios(id)\nid_categoria → categorias(id) ON DELETE SET NULL",
-         "tipo CHECK IN ('receita','despesa')\nvalor NUMERIC(12,2) > 0"],
+        [Paragraph("Tabela",             ddl_hdr),
+         Paragraph("Chave Primária",     ddl_hdr),
+         Paragraph("Chaves Estrangeiras",ddl_hdr),
+         Paragraph("Constraint principal",ddl_hdr)],
+        [Paragraph("usuarios",  ddl_body),
+         Paragraph("id SERIAL", ddl_code),
+         Paragraph("—",         ddl_body),
+         Paragraph("email UNIQUE", ddl_code)],
+        [Paragraph("categorias", ddl_body),
+         Paragraph("id SERIAL",  ddl_code),
+         Paragraph("id_usuario → usuarios(id)<br/>ON DELETE CASCADE", ddl_code),
+         Paragraph("nome NOT NULL", ddl_code)],
+        [Paragraph("transacoes", ddl_body),
+         Paragraph("id SERIAL",  ddl_code),
+         Paragraph("id_usuario → usuarios(id)<br/>id_categoria → categorias(id)<br/>ON DELETE SET NULL", ddl_code),
+         Paragraph("tipo CHECK IN<br/>('receita','despesa')<br/>valor NUMERIC(12,2) &gt; 0", ddl_code)],
     ]
-    ddl_table = Table(ddl_data, colWidths=[2.8 * cm, 2.8 * cm, 5.8 * cm, 5.0 * cm])
+    ddl_table = Table(ddl_data, colWidths=[2.6 * cm, 2.6 * cm, 6.4 * cm, 4.9 * cm])
     ddl_table.setStyle(TableStyle([
         ('BACKGROUND',    (0, 0), (-1, 0), colors.HexColor("#1E429F")),
-        ('TEXTCOLOR',     (0, 0), (-1, 0), colors.white),
-        ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE',      (0, 0), (-1, -1), 7.5),
         ('BACKGROUND',    (0, 1), (-1, 1), colors.HexColor("#DBEAFE")),
         ('BACKGROUND',    (0, 2), (-1, 2), colors.HexColor("#D1FAE5")),
         ('BACKGROUND',    (0, 3), (-1, 3), colors.HexColor("#FEF3C7")),
         ('GRID',          (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
         ('TOPPADDING',    (0, 0), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 6),
         ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
     ]))
     story.append(ddl_table)
