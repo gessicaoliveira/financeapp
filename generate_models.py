@@ -250,19 +250,20 @@ def draw_arrow_with_card(ax, x1, y1, x2, y2, card1, card2):
 # ═══════════════════════════════════════════════════════════════
 
 def build_logical_diagram():
-    fig, ax = plt.subplots(figsize=(16, 12))
+    # Figura mais alta para acomodar TRANSACAO (14 atributos) sem sobrepor a legenda
+    fig, ax = plt.subplots(figsize=(16, 18))
     ax.set_xlim(0, 16)
-    ax.set_ylim(0, 12)
+    ax.set_ylim(0, 18)
     ax.axis('off')
     fig.patch.set_facecolor('#F8FAFC')
 
     # Título
-    ax.text(8, 11.5, "DIAGRAMA DO MODELO LÓGICO",
+    ax.text(8, 17.4, "DIAGRAMA DO MODELO LÓGICO",
             ha='center', va='center', fontsize=15, fontweight='bold',
             color=C_HEADER,
             bbox=dict(boxstyle="round,pad=0.4", facecolor=C_ACCENT,
                       edgecolor=C_BORDER, linewidth=2))
-    ax.text(8, 10.95, "Sistema Fintech – Controle Financeiro Pessoal",
+    ax.text(8, 16.85, "Sistema Fintech – Controle Financeiro Pessoal",
             ha='center', va='center', fontsize=9, color=C_TEXT_LIGHT)
 
     h_row = 0.40
@@ -270,79 +271,81 @@ def build_logical_diagram():
 
     # ── USUARIO (esquerda) ──────────────────────────────────
     usr_attrs = ENTITIES["USUARIO"]["attrs"]
-    usr_x, usr_y = 0.4, 9.8
+    usr_x, usr_y = 0.4, 15.8
     draw_entity(ax, usr_x, usr_y, ent_w, h_row,
                 "USUARIO", usr_attrs,
                 ENTITIES["USUARIO"]["color"],
                 ENTITIES["USUARIO"]["header"])
     usr_cx = usr_x + ent_w / 2
-    usr_cy = usr_y - h_row / 2       # centro do cabeçalho
-    usr_total_h = h_row * (len(usr_attrs) + 1)
-    usr_mid_y = usr_y - usr_total_h / 2
+    usr_total_h = h_row * (len(usr_attrs) + 1)   # 2.4
+    usr_bottom  = usr_y - usr_total_h             # 13.4
+    usr_mid_y   = usr_y - usr_total_h / 2         # 14.6
 
     # ── CATEGORIA (direita) ─────────────────────────────────
     cat_attrs = ENTITIES["CATEGORIA"]["attrs"]
-    cat_x, cat_y = 11.8, 9.8
+    cat_x, cat_y = 11.8, 15.8
     draw_entity(ax, cat_x, cat_y, ent_w, h_row,
                 "CATEGORIA", cat_attrs,
                 ENTITIES["CATEGORIA"]["color"],
                 ENTITIES["CATEGORIA"]["header"])
     cat_cx = cat_x + ent_w / 2
-    cat_total_h = h_row * (len(cat_attrs) + 1)
-    cat_mid_y = cat_y - cat_total_h / 2
+    cat_total_h = h_row * (len(cat_attrs) + 1)   # 3.2
+    cat_bottom  = cat_y - cat_total_h             # 12.6
+    cat_mid_y   = cat_y - cat_total_h / 2         # 14.2
 
     # ── TRANSACAO (centro-baixo) ────────────────────────────
-    tra_attrs = ENTITIES["TRANSACAO"]["attrs"]
-    tra_x, tra_y = 6.1, 6.4
+    # Posicionada com bottom em ~3.8 para deixar espaço à legenda
+    tra_attrs  = ENTITIES["TRANSACAO"]["attrs"]
+    tra_total_h = h_row * (len(tra_attrs) + 1)    # 6.0
+    tra_y = 3.8 + tra_total_h                      # 9.8  → bottom em 3.8
+    tra_x = 6.1
     draw_entity(ax, tra_x, tra_y, ent_w, h_row,
                 "TRANSACAO", tra_attrs,
                 ENTITIES["TRANSACAO"]["color"],
                 ENTITIES["TRANSACAO"]["header"])
-    tra_cx = tra_x + ent_w / 2
-    tra_total_h = h_row * (len(tra_attrs) + 1)
-    tra_mid_y = tra_y - tra_total_h / 2
+    tra_cx     = tra_x + ent_w / 2
+    tra_bottom = tra_y - tra_total_h               # 3.8
+    tra_mid_y  = tra_y - tra_total_h / 2           # 6.8
 
     # ── Losangos de relacionamento ──────────────────────────
-    # USUARIO --[cria]--> CATEGORIA
+    # 1) USUARIO --[cria]--> CATEGORIA  (horizontal na altura média de CATEGORIA)
     rel1_cx = 8.0
-    rel1_cy = usr_mid_y
+    rel1_cy = cat_mid_y                            # 14.2
     draw_relationship_diamond(ax, rel1_cx, rel1_cy, 1.4, 0.48, "cria")
+    # linhas e cardinalidades
     draw_arrow_with_card(ax, usr_x + ent_w, rel1_cy, rel1_cx - 0.70, rel1_cy, "1", "0..N")
-    draw_arrow_with_card(ax, rel1_cx + 0.70, rel1_cy, cat_x, rel1_cy, "", "")
     ax.annotate("", xy=(cat_x, rel1_cy), xytext=(rel1_cx + 0.70, rel1_cy),
                 arrowprops=dict(arrowstyle="-", color=C_LINE, lw=1.5), zorder=2)
 
-    # USUARIO --[registra]--> TRANSACAO
-    rel2_cx = usr_cx
-    rel2_cy = tra_y - h_row / 2 + 0.2
+    # 2) USUARIO --[registra]--> TRANSACAO  (desce pela esquerda)
+    rel2_cx = usr_cx                               # 2.3
+    rel2_cy = (usr_bottom + tra_y) / 2            # (13.4 + 9.8)/2 = 11.6
     draw_relationship_diamond(ax, rel2_cx, rel2_cy, 1.4, 0.48, "registra")
-    # Linha de USUARIO para losango
-    ax.plot([usr_cx, rel2_cx], [usr_y - usr_total_h, rel2_cy + 0.24],
+    ax.plot([usr_cx, rel2_cx], [usr_bottom, rel2_cy + 0.24],
             color=C_LINE, lw=1.5, zorder=2)
-    # Linha de losango para TRANSACAO
     ax.plot([rel2_cx, tra_cx], [rel2_cy - 0.24, tra_y],
             color=C_LINE, lw=1.5, zorder=2)
-    ax.text(usr_cx - 0.18, usr_y - usr_total_h + 0.28, "1",
+    ax.text(usr_cx - 0.28, usr_bottom + 0.22, "1",
             fontsize=7, color=C_PRIMARY, fontweight='bold', ha='center', zorder=5)
-    ax.text(tra_cx - 0.28, tra_y + 0.25, "1..N",
+    ax.text(tra_cx - 0.36, tra_y + 0.22, "1..N",
             fontsize=7, color=C_PRIMARY, fontweight='bold', ha='center', zorder=5)
 
-    # CATEGORIA --[classifica]--> TRANSACAO
-    rel3_cx = cat_cx
-    rel3_cy = tra_y - h_row / 2 + 0.2
+    # 3) CATEGORIA --[classifica]--> TRANSACAO  (desce pela direita)
+    rel3_cx = cat_cx                               # 13.7
+    rel3_cy = (cat_bottom + tra_y) / 2            # (12.6 + 9.8)/2 = 11.2
     draw_relationship_diamond(ax, rel3_cx, rel3_cy, 1.6, 0.48, "classifica")
-    ax.plot([cat_cx, rel3_cx], [cat_y - cat_total_h, rel3_cy + 0.24],
+    ax.plot([cat_cx, rel3_cx], [cat_bottom, rel3_cy + 0.24],
             color=C_LINE, lw=1.5, zorder=2)
     ax.plot([rel3_cx, tra_cx + ent_w], [rel3_cy - 0.24, tra_y - h_row / 2],
             color=C_LINE, lw=1.5, zorder=2)
-    ax.text(cat_cx + 0.18, cat_y - cat_total_h + 0.28, "1",
+    ax.text(cat_cx + 0.28, cat_bottom + 0.22, "1",
             fontsize=7, color=C_PRIMARY, fontweight='bold', ha='center', zorder=5)
-    ax.text(tra_cx + ent_w + 0.22, tra_y - h_row / 2 + 0.15, "0..N",
+    ax.text(tra_cx + ent_w + 0.30, tra_y - h_row / 2 + 0.18, "0..N",
             fontsize=7, color=C_PRIMARY, fontweight='bold', ha='center', zorder=5)
 
-    # ── Legenda ────────────────────────────────────────────
-    legend_x, legend_y = 0.3, 1.5
-    ax.text(legend_x, legend_y + 0.5, "LEGENDA", fontsize=8, fontweight='bold', color=C_HEADER)
+    # ── Legenda (abaixo de TRANSACAO, sem sobreposição) ────
+    legend_x, legend_y = 0.3, 2.9
+    ax.text(legend_x, legend_y + 0.42, "LEGENDA", fontsize=8, fontweight='bold', color=C_HEADER)
 
     items = [
         (C_HEADER,   "Entidade"),
@@ -359,11 +362,10 @@ def build_logical_diagram():
         ax.add_patch(rect)
         ax.text(bx + 0.44, legend_y + 0.12, lbl, fontsize=7.5, va='center', color=C_TEXT_MID)
 
-    # Linha divisória da legenda
-    ax.plot([0.3, 15.7], [1.1, 1.1], color="#CBD5E1", lw=1.0)
-    ax.text(0.3, 0.7, "Cardinalidades:  1 = exatamente um   |   0..N = zero ou muitos   |   1..N = um ou muitos",
+    ax.plot([0.3, 15.7], [2.5, 2.5], color="#CBD5E1", lw=1.0)
+    ax.text(0.3, 2.1, "Cardinalidades:  1 = exatamente um   |   0..N = zero ou muitos   |   1..N = um ou muitos",
             fontsize=7.5, color=C_TEXT_LIGHT)
-    ax.text(0.3, 0.35, "O modelo reflete o sistema Fintech conforme User Stories US01–US05 e casos de uso documentados.",
+    ax.text(0.3, 1.7, "O modelo reflete o sistema Fintech conforme User Stories US01–US05 e casos de uso documentados.",
             fontsize=7.5, color=C_TEXT_LIGHT)
 
     plt.tight_layout()
@@ -658,30 +660,11 @@ def build_pdf(output_path):
 
     story = []
 
-    # ── Capa / Cabeçalho ─────────────────────────────────────
+    # ── Cabeçalho ────────────────────────────────────────────
     story.append(Spacer(1, 0.5 * cm))
     story.append(Paragraph("MODELAGEM DE DADOS – FINTECH", title_style))
     story.append(Paragraph("Sistema de Controle Financeiro Pessoal", subtitle_style))
-
-    # Tabela de identificação
-    id_data = [
-        ["Disciplina:", "Engenharia de Software / Banco de Dados"],
-        ["Sistema:",    "Fintech – Controle Financeiro Pessoal"],
-        ["Versão:",     "1.0"],
-        ["Data:",       "27/05/2026"],
-    ]
-    id_table = Table(id_data, colWidths=[3.5 * cm, 13 * cm])
-    id_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor("#DBEAFE")),
-        ('FONTNAME',   (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME',   (1, 0), (1, -1), 'Helvetica'),
-        ('FONTSIZE',   (0, 0), (-1, -1), 8.5),
-        ('GRID',       (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-    ]))
-    story.append(id_table)
-    story.append(Spacer(1, 0.6 * cm))
+    story.append(Spacer(1, 0.4 * cm))
 
     # ── Seção 1 – Modelo Lógico ───────────────────────────────
     story.append(Paragraph("1. DIAGRAMA DO MODELO LÓGICO", section_style))
@@ -692,38 +675,53 @@ def build_pdf(output_path):
         "e dos casos de uso documentados nas fases anteriores do projeto.",
         body_style))
 
-    # Diagrama lógico
+    # Diagrama lógico (proporção 16x18)
     logical_buf = build_logical_diagram()
     logical_img = Image(logical_buf)
     logical_img.drawWidth  = 17 * cm
-    logical_img.drawHeight = 17 * cm * (12 / 16)
+    logical_img.drawHeight = 17 * cm * (18 / 16)
     story.append(logical_img)
     story.append(Spacer(1, 0.4 * cm))
 
     # Tabela de entidades / relacionamentos
+    # Usa Paragraph em cada célula para garantir quebra de linha automática
     story.append(Paragraph("Entidades e Relacionamentos:", body_style))
+
+    cell_hdr = ParagraphStyle('CellHdr', parent=styles['Normal'],
+                               fontSize=8, fontName='Helvetica-Bold',
+                               textColor=colors.white, leading=11)
+    cell_body = ParagraphStyle('CellBody', parent=styles['Normal'],
+                                fontSize=8, fontName='Helvetica', leading=11,
+                                textColor=colors.HexColor("#111827"))
+    cell_rel = ParagraphStyle('CellRel', parent=styles['Normal'],
+                               fontSize=8, fontName='Helvetica', leading=11,
+                               textColor=colors.HexColor("#1D4ED8"))
+
     ent_data = [
-        ["Entidade",   "Descrição",                                                  "Relacionamentos"],
-        ["USUARIO",    "Pessoa física que usa o sistema para gerenciar finanças.",
-         "1 usuário → N transações\n1 usuário → N categorias personalizadas"],
-        ["CATEGORIA",  "Agrupamento temático das transações (ex: Alimentação, Lazer).",
-         "1 categoria → N transações\nPode ser padrão do sistema ou do usuário"],
-        ["TRANSACAO",  "Registro financeiro de receita ou despesa.",
-         "N:1 categoria\nN:1 usuário"],
+        [Paragraph("Entidade", cell_hdr),
+         Paragraph("Descrição", cell_hdr),
+         Paragraph("Relacionamentos", cell_hdr)],
+        [Paragraph("USUARIO", cell_body),
+         Paragraph("Pessoa física que usa o sistema para gerenciar suas finanças pessoais.", cell_body),
+         Paragraph("1 usuário → N transações<br/>1 usuário → N categorias personalizadas", cell_rel)],
+        [Paragraph("CATEGORIA", cell_body),
+         Paragraph("Agrupamento temático das transações (ex: Alimentação, Lazer).", cell_body),
+         Paragraph("1 categoria → N transações<br/>Pode ser padrão do sistema ou criada pelo usuário", cell_rel)],
+        [Paragraph("TRANSACAO", cell_body),
+         Paragraph("Registro financeiro de receita ou despesa realizado pelo usuário.", cell_body),
+         Paragraph("N transações → 1 categoria<br/>N transações → 1 usuário", cell_rel)],
     ]
-    ent_table = Table(ent_data, colWidths=[3 * cm, 7 * cm, 6.5 * cm])
+    ent_table = Table(ent_data, colWidths=[3.0 * cm, 7.5 * cm, 6.0 * cm])
     ent_table.setStyle(TableStyle([
         ('BACKGROUND',    (0, 0), (-1, 0), colors.HexColor("#1E429F")),
-        ('TEXTCOLOR',     (0, 0), (-1, 0), colors.white),
-        ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE',      (0, 0), (-1, -1), 8),
         ('BACKGROUND',    (0, 1), (-1, 1), colors.HexColor("#DBEAFE")),
         ('BACKGROUND',    (0, 2), (-1, 2), colors.HexColor("#D1FAE5")),
         ('BACKGROUND',    (0, 3), (-1, 3), colors.HexColor("#FEF3C7")),
         ('GRID',          (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
         ('TOPPADDING',    (0, 0), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING',   (0, 0), (-1, -1), 6),
+        ('VALIGN',        (0, 0), (-1, -1), 'TOP'),
     ]))
     story.append(ent_table)
 
